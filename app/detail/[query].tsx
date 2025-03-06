@@ -142,6 +142,9 @@ const Detail = () => {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}
+					initialNumToRender={10}
+					maxToRenderPerBatch={10}
+					removeClippedSubviews={true}
 				/>
 			</View>
 		</SafeAreaView >
