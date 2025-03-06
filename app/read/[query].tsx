@@ -193,9 +193,12 @@ const Read = () => {
 						</View>
 						{isChapterListVisible && (
 							<View className="absolute bottom-12 bg-slate-900 w-full p-2 flex-1 rounded-lg left-2">
-								<ScrollView className="max-h-72 w-full">
-									{selectedManga?.chapters?.map((chapter: any, index: any) => (
-										<View key={index} >
+								<FlatList
+									className="max-h-72 w-full"
+									data={selectedManga?.chapters || []}
+									keyExtractor={(_, index) => index.toString()}
+									renderItem={({ item: chapter, index }) => (
+										<View key={index}>
 											<TouchableOpacity
 												onPress={() => handleChapterClick(chapter)}
 												key={index}>
@@ -206,8 +209,12 @@ const Read = () => {
 											</TouchableOpacity>
 											<View className="h-1 bg-slate-800" />
 										</View>
-									))}
-								</ScrollView>
+									)}
+									initialNumToRender={10}
+									maxToRenderPerBatch={10}
+									windowSize={5}
+									removeClippedSubviews={true}
+								/>
 							</View>
 						)}
 					</TouchableOpacity>
