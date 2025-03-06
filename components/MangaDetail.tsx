@@ -7,7 +7,11 @@ const MangaDetail = ({ manga, className = '' }: { manga: any, className?: string
 	return (
 		<View className={`flex flex-row ${className}`}>
 			<View className='flex-1 max-h-[200px] max-w-[120px]'>
-				<Image source={{ uri: manga?.image }} className="w-[100%] h-[100%]" resizeMode='contain' />
+				<Image
+					source={{ uri: manga?.image }}
+					className="w-[100%] h-[100%] rounded-md"
+					defaultSource={{ uri: 'https://placehold.co/100x160' }}
+				/>
 			</View>
 			<View className='flex-1 ml-4 flex flex-col justify-between'>
 				<View>
