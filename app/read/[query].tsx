@@ -32,21 +32,41 @@ const Read = () => {
 			setLoadingProgress(0);
 			const response = await mangaDexService.getChapters(chapterId ?? query as string);
 
-			const processedChapters = response.map((chapter: any, index: number) => new Promise((resolve) => {
-				Image.getSize(chapter.img, (width, height) => {
-					const ratio = win.width / width;
-					const imageHeight = height * ratio;
-					const imageWidth = win.width;
-					setLoadingProgress((index + 1) / response.length * 100);
-					resolve({ img: chapter.img, page: chapter.page, width: Math.round(imageWidth), height: Math.round(imageHeight) });
-				});
-			}));
+			// Process initial batch of 5 images
+			const processInitialBatch = async (startIndex: number, batchSize: number) => {
+				const batch = response.slice(startIndex, startIndex + batchSize);
+				const processedBatch = batch.map((chapter: any, index: number) => new Promise((resolve) => {
+					Image.getSize(chapter.img, (width, height) => {
+						const ratio = win.width / width;
+						const imageHeight = height * ratio;
+						const imageWidth = win.width;
+						setLoadingProgress(((startIndex + index + 1) / response.length) * 100);
+						resolve({ img: chapter.img, page: chapter.page, width: Math.round(imageWidth), height: Math.round(imageHeight) });
+					});
+				}));
+				return await Promise.all(processedBatch);
+			};
 
-			const chapterData = await Promise.all(processedChapters);
-			setChapter(chapterData);
+			// Load initial 5 images
+			const initialBatchSize = 5;
+			const initialChapters = await processInitialBatch(0, initialBatchSize);
+			setChapter(initialChapters);
+			setLoading(false);
+
+			// Process remaining images in background
+			if (response.length > initialBatchSize) {
+				const loadRemainingImages = async () => {
+					for (let i = initialBatchSize; i < response.length; i += 5) {
+						const nextBatch = await processInitialBatch(i, 5);
+						setChapter(prev => [...prev, ...nextBatch]);
+					}
+				};
+				loadRemainingImages();
+			}
+
 		} catch (error) {
 			console.error('Error fetching chapter:', error);
-
+			setLoading(false);
 			return (
 				<View className="flex-1 justify-center items-center">
 					<View className="px-4 py-8 items-center">
@@ -65,8 +85,6 @@ const Read = () => {
 					</View>
 				</View>
 			);
-		} finally {
-			setLoading(false);
 		}
 	};
 
@@ -134,7 +152,7 @@ const Read = () => {
 	return (
 		<SafeAreaView>
 			<View>
-				<View className="max-h-[80vh]">
+				<View className="max-h-[85vh]">
 					<FlatList
 						data={chapters}
 						renderItem={({ item: chapter }) => (

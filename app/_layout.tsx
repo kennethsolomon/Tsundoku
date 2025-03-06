@@ -13,7 +13,7 @@ const RootLayout = () => {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
-          <Stack.Screen name="read/[query]" options={{ headerShown: true, title: '', }} />
+          <Stack.Screen name="read/[query]" options={{ headerShown: false, title: '', }} />
           <Stack.Screen name="detail/[query]" options={{ headerShown: true, title: '', }} />
         </Stack>
         <StatusBar style="auto" />
