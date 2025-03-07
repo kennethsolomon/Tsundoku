@@ -39,7 +39,7 @@ const Read = () => {
 			const processInitialBatch = async (startIndex: number, batchSize: number) => {
 				const batch = response.slice(startIndex, startIndex + batchSize);
 				const processedBatch = batch.map((chapter: any, index: number) => new Promise((resolve) => {
-					Image.getSize(chapter.img, (width, height) => {
+					Image.getSize(chapter.img, (width: number, height: number) => {
 						const ratio = win.width / width;
 						const imageHeight = height * ratio;
 						const imageWidth = win.width;
@@ -50,7 +50,7 @@ const Read = () => {
 				return await Promise.all(processedBatch);
 			};
 
-			// Load initial 5 images
+			// Load 1 image
 			const initialBatchSize = 5;
 			const initialChapters = await processInitialBatch(0, initialBatchSize);
 			setChapter(initialChapters);
@@ -136,7 +136,7 @@ const Read = () => {
 	// Loading
 	if (loading || (refreshing && chapters.length === 0)) {
 		return (
-			<View className="flex-1 items-center justify-center">
+			<View className="flex-1 items-center justify-center bg-black">
 				<View className="w-3/4">
 					<View className="h-2 bg-gray-200 rounded-full">
 						<View
@@ -153,9 +153,9 @@ const Read = () => {
 	}
 
 	return (
-		<SafeAreaView>
-			<View>
-				<View className={`max-h-[${showNavigatorBar ? '85vh' : '100vh'}]`}>
+		<SafeAreaView className="flex-1 bg-black">
+			<View className="flex-1 relative">
+				<View className="flex-1">
 					<FlatList
 						data={chapters}
 						renderItem={({ item: chapter }) => (
@@ -190,7 +190,6 @@ const Read = () => {
 									resizeMode="contain"
 									style={{ width: chapter.width, height: chapter.height }}
 								/>
-
 							</TouchableOpacity>
 						)}
 						keyExtractor={(_, index) => index.toString()}
@@ -206,70 +205,74 @@ const Read = () => {
 						)}
 					/>
 				</View>
-				{showMangaDetail && (
-					<View>
-						<MangaDetail manga={selectedManga} className='absolute bottom-0 bg-black w-full p-4' />
-						<View className="h-[1px] bg-slate-700" />
-					</View>
 
-				)}
-				{showNavigatorBar && (
-					<View className="flex-1">
-						<View className="flex flex-row justify-between items-center mx-12 h-[70px]">
-							<TouchableOpacity
-								className="bg-slate-900 rounded-full p-2"
-								onPress={handleNextChapter}
-								disabled={currentChapterIndex === selectedManga?.chapters?.length - 1}
-								style={{ opacity: currentChapterIndex === selectedManga?.chapters?.length - 1 ? 0.5 : 1 }}
-							>
-								<MaterialCommunityIcons name="arrow-left" color="#FFA001" size={24} />
-							</TouchableOpacity>
-							<TouchableOpacity
-								activeOpacity={0.7}
-								onPress={() => setIsChapterListVisible(!isChapterListVisible)}
-								className="bg-slate-900 rounded-full p-2 w-full flex-1 mx-4">
-								<View className="flex flex-row items-center gap-2 px-2 justify-between">
-									<Text className="text-white text-lg font-bold">{selectedChapter?.title}</Text>
-									<MaterialCommunityIcons name={isChapterListVisible ? "chevron-up" : "chevron-down"} color="#FFA001" size={24} />
-								</View>
-								{isChapterListVisible && (
-									<View className="absolute bottom-12 bg-slate-900 w-full p-2 flex-1 rounded-lg left-2">
-										<FlatList
-											className="max-h-72 w-full"
-											data={selectedManga?.chapters || []}
-											keyExtractor={(_, index) => index.toString()}
-											renderItem={({ item: chapter, index }) => (
-												<View key={index}>
-													<TouchableOpacity
-														onPress={() => handleChapterClick(chapter)}
-														key={index}>
-														<View className="py-1">
-															<Text className="text-white text-base text-center">Title: {chapter.title}</Text>
-															<Text className="text-white text-base text-center">Chapter: {chapter.chapterNumber}</Text>
-														</View>
-													</TouchableOpacity>
-													<View className="h-1 bg-slate-800" />
-												</View>
-											)}
-											initialNumToRender={10}
-											maxToRenderPerBatch={10}
-											windowSize={5}
-											removeClippedSubviews={true}
-										/>
-									</View>
-								)}
-							</TouchableOpacity>
-							<TouchableOpacity
-								className="bg-slate-900 rounded-full p-2"
-								onPress={handlePreviousChapter}
-								disabled={currentChapterIndex === 0}
-								style={{ opacity: currentChapterIndex === 0 ? 0.5 : 1 }}
-							>
-								<MaterialCommunityIcons name="arrow-right" color="#FFA001" size={24} />
-							</TouchableOpacity>
+				{/* Bottom controls container */}
+				<View className="absolute bottom-0 left-0 right-0">
+					{showMangaDetail && (
+						<View>
+							<MangaDetail manga={selectedManga} className='bg-black w-full p-4' />
+							<View className="h-[1px] bg-slate-700" />
 						</View>
-					</View>
-				)}
+					)}
+
+					{showNavigatorBar && (
+						<View className="bg-black py-4">
+							<View className="flex flex-row justify-between items-center mx-12">
+								<TouchableOpacity
+									className="bg-slate-900 rounded-full p-2"
+									onPress={handleNextChapter}
+									disabled={currentChapterIndex === selectedManga?.chapters?.length - 1}
+									style={{ opacity: currentChapterIndex === selectedManga?.chapters?.length - 1 ? 0.5 : 1 }}
+								>
+									<MaterialCommunityIcons name="arrow-left" color="#FFA001" size={24} />
+								</TouchableOpacity>
+								<TouchableOpacity
+									activeOpacity={0.7}
+									onPress={() => setIsChapterListVisible(!isChapterListVisible)}
+									className="bg-slate-900 rounded-full p-2 w-full flex-1 mx-4">
+									<View className="flex flex-row items-center gap-2 px-2 justify-between">
+										<Text className="text-white text-lg font-bold">{selectedChapter?.title}</Text>
+										<MaterialCommunityIcons name={isChapterListVisible ? "chevron-up" : "chevron-down"} color="#FFA001" size={24} />
+									</View>
+									{isChapterListVisible && (
+										<View className="bg-slate-900 absolute bottom-12 w-full p-2 rounded-lg left-2">
+											<FlatList
+												className="max-h-72 w-full"
+												data={selectedManga?.chapters || []}
+												keyExtractor={(_, index) => index.toString()}
+												renderItem={({ item: chapter, index }) => (
+													<View key={index}>
+														<TouchableOpacity
+															onPress={() => handleChapterClick(chapter)}
+															key={index}>
+															<View className="py-1">
+																<Text className="text-white text-base text-center">Title: {chapter.title}</Text>
+																<Text className="text-white text-base text-center">Chapter: {chapter.chapterNumber}</Text>
+															</View>
+														</TouchableOpacity>
+														<View className="h-1 bg-slate-800" />
+													</View>
+												)}
+												initialNumToRender={10}
+												maxToRenderPerBatch={10}
+												windowSize={5}
+												removeClippedSubviews={true}
+											/>
+										</View>
+									)}
+								</TouchableOpacity>
+								<TouchableOpacity
+									className="bg-slate-900 rounded-full p-2"
+									onPress={handlePreviousChapter}
+									disabled={currentChapterIndex === 0}
+									style={{ opacity: currentChapterIndex === 0 ? 0.5 : 1 }}
+								>
+									<MaterialCommunityIcons name="arrow-right" color="#FFA001" size={24} />
+								</TouchableOpacity>
+							</View>
+						</View>
+					)}
+				</View>
 			</View>
 		</SafeAreaView>
 	)

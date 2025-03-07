@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start -c",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "axios": "^1.8.1",
@@ -25,7 +26,7 @@
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
     "expo-linking": "~7.0.5",
-    "expo-router": "~4.0.17",
+    "expo-router": "^3.1.0",
     "expo-splash-screen": "~0.29.22",
     "expo-status-bar": "~2.0.1",
     "expo-symbols": "~0.2.2",

@@ -1,11 +1,11 @@
-import { View, Text, SafeAreaView, Image, TouchableOpacity, FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, SafeAreaView, Image, TouchableOpacity, FlatList, RefreshControl, Alert, ActivityIndicator, ScrollView } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import { MangaFactory } from '@/factory/MangaFactory';
 import MangaDetail from '@/components/MangaDetail';
-
+import { getDescription } from '@/utils/common';
 const Detail = () => {
 	const { query } = useLocalSearchParams();
 	const [expanded, setExpanded] = useState(false);
@@ -20,9 +20,10 @@ const Detail = () => {
 		setRefreshing(false);
 	};
 
+	const mangaService = useRef(new MangaFactory().getMangaService('mangadex')).current;
+
 	async function getMangaInfo() {
 		try {
-			const mangaService = new MangaFactory().getMangaService('mangadex');
 			const manga = await mangaService.getMangaInfo(query as string);
 			setManga(manga);
 		} catch (error) {
@@ -60,21 +61,23 @@ const Detail = () => {
 
 	if (!manga) {
 		return (
-			<View className="flex-1 items-center justify-center">
+			<View className="flex-1 items-center justify-center bg-black">
 				<ActivityIndicator size="large" color="#FFA001" />
 			</View>
 		);
 	}
 
 	return (
-		<SafeAreaView className="max-h-[91vh] max-w-[100vw]">
-			<View className="mt-[2vh] mb-4 px-4">
+		<SafeAreaView className="flex-1 bg-black">
+			<View className="flex-1 px-4">
 				<MangaDetail manga={manga} />
 
-				<View className='mt-4 flex flex-col'>
+				<View className='mt-4'>
 					<View>
 						<Text className='text-white text-xl font-bold'>About this manga</Text>
-						<Text className={`text-slate-400 mt-2 ${!expanded ? 'line-clamp-3' : ''}`}>{manga?.description?.en}</Text>
+						<Text className={`text-slate-400 mt-2 ${!expanded ? 'line-clamp-3' : ''}`}>
+							{getDescription(manga.description)}
+						</Text>
 					</View>
 					<View className="flex items-end">
 						<TouchableOpacity onPress={() => setExpanded(!expanded)}>
@@ -88,7 +91,7 @@ const Detail = () => {
 				</TouchableOpacity>
 
 				<FlatList
-					className='max-h-[45vh] mt-2'
+					className='mt-4 flex-1'
 					data={manga.chapters}
 					renderItem={({ item }) => (
 						<TouchableOpacity
@@ -147,7 +150,7 @@ const Detail = () => {
 					removeClippedSubviews={true}
 				/>
 			</View>
-		</SafeAreaView >
+		</SafeAreaView>
 	)
 }
 
