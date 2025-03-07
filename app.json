@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "tachiyomi-ios",
-    "slug": "tachiyomi-ios",
+    "name": "tachiyomi",
+    "slug": "tachiyomi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kennethsolomon.tachiyomi",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,6 +40,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "79766faf-5c30-44f8-82cd-6586bb64bec6"
+      }
     }
   }
 }
