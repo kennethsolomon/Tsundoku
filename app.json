@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "tachiyomi",
-    "slug": "tachiyomi",
+    "name": "tachiyomi-ios",
+    "slug": "tachiyomi-ios",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kennethsolomon.tachiyomi",
+      "bundleIdentifier": "com.kennethsolomon.tachiyomi-ios",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -48,6 +48,12 @@
       "eas": {
         "projectId": "79766faf-5c30-44f8-82cd-6586bb64bec6"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/79766faf-5c30-44f8-82cd-6586bb64bec6"
     }
   }
 }
