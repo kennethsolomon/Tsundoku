@@ -13,9 +13,14 @@ interface Chapter {
 	height: number;
 }
 
+interface ChapterPage {
+	img: string;
+	page: number;
+}
+
 const Read = () => {
 	const { query } = useLocalSearchParams();
-	const { selectedChapter, selectedManga, setSelectedChapter, setSelectedManga } = useGlobalContext();
+	const { selectedChapter, selectedManga, setSelectedChapter, setSelectedManga, isChapterDownloaded, downloads, getDownloadProgress } = useGlobalContext();
 	const [isChapterListVisible, setIsChapterListVisible] = useState(false);
 	const [chapters, setChapter] = useState<Chapter[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -25,69 +30,108 @@ const Read = () => {
 	const [showNavigatorBar, setShowNavigatorBar] = useState(false);
 	const [lastTap, setLastTap] = useState<number | null>(null);
 	const [showMangaDetail, setShowMangaDetail] = useState(false);
+	const [isOfflineMode, setIsOfflineMode] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const win = Dimensions.get('window');
 
 	// Initialize Chapter
 	const fetchChapter = async () => {
 		setLoading(true);
+		setError(null);
 		try {
 			setLoadingProgress(0);
-			const response = await mangaDexService.getChapters(chapterId ?? query as string);
+			const currentChapterId = chapterId ?? query as string;
+
+			// Check if chapter is downloaded
+			const isDownloaded = await isChapterDownloaded(currentChapterId);
+			setIsOfflineMode(isDownloaded);
+
+			let chapterPages: ChapterPage[] = [];
+			if (isDownloaded) {
+				// Use downloaded chapter
+				const downloadedChapter = downloads.find((d: { chapterId: string }) => d.chapterId === currentChapterId);
+				if (downloadedChapter) {
+					chapterPages = downloadedChapter.pages.map((uri: string, index: number) => ({
+						img: uri,
+						page: index + 1
+					}));
+				} else {
+					throw new Error('Downloaded chapter not found');
+				}
+			} else {
+				// Fetch from API
+				try {
+					chapterPages = await mangaDexService.getChapters(currentChapterId);
+					if (!chapterPages || chapterPages.length === 0) {
+						throw new Error('No pages found for this chapter');
+					}
+				} catch (error) {
+					console.error('Error fetching chapter from API:', error);
+					setError('Failed to load chapter. Please check your internet connection and try again.');
+					setLoading(false);
+					return;
+				}
+			}
 
 			// Process initial batch of 5 images
-			const processInitialBatch = async (startIndex: number, batchSize: number) => {
-				const batch = response.slice(startIndex, startIndex + batchSize);
-				const processedBatch = batch.map((chapter: any, index: number) => new Promise((resolve) => {
-					Image.getSize(chapter.img, (width: number, height: number) => {
-						const ratio = win.width / width;
-						const imageHeight = height * ratio;
-						const imageWidth = win.width;
-						setLoadingProgress(((startIndex + index + 1) / response.length) * 100);
-						resolve({ img: chapter.img, page: chapter.page, width: Math.round(imageWidth), height: Math.round(imageHeight) });
-					});
+			const processInitialBatch = async (startIndex: number, batchSize: number): Promise<Chapter[]> => {
+				const batch = chapterPages.slice(startIndex, startIndex + batchSize);
+				const processedBatch = batch.map((chapter: ChapterPage, index: number) => new Promise<Chapter>((resolve, reject) => {
+					Image.getSize(
+						chapter.img,
+						(width: number, height: number) => {
+							const ratio = win.width / width;
+							const imageHeight = height * ratio;
+							const imageWidth = win.width;
+							setLoadingProgress(((startIndex + index + 1) / chapterPages.length) * 100);
+							resolve({
+								img: chapter.img,
+								page: chapter.page,
+								width: Math.round(imageWidth),
+								height: Math.round(imageHeight)
+							});
+						},
+						(error) => {
+							console.error('Error loading image:', error);
+							reject(error);
+						}
+					);
 				}));
-				return await Promise.all(processedBatch);
+
+				try {
+					return await Promise.all(processedBatch);
+				} catch (error) {
+					console.error('Error processing images:', error);
+					throw new Error('Failed to load chapter images');
+				}
 			};
 
-			// Load 1 image
+			// Load initial batch
 			const initialBatchSize = 5;
 			const initialChapters = await processInitialBatch(0, initialBatchSize);
 			setChapter(initialChapters);
 			setLoading(false);
 
 			// Process remaining images in background
-			if (response.length > initialBatchSize) {
+			if (chapterPages.length > initialBatchSize) {
 				const loadRemainingImages = async () => {
-					for (let i = initialBatchSize; i < response.length; i += 5) {
-						const nextBatch = await processInitialBatch(i, 5);
-						setChapter(prev => [...prev, ...nextBatch]);
+					try {
+						for (let i = initialBatchSize; i < chapterPages.length; i += 5) {
+							const nextBatch = await processInitialBatch(i, 5);
+							setChapter(prev => [...prev, ...nextBatch]);
+						}
+					} catch (error) {
+						console.error('Error loading remaining images:', error);
+						setError('Some images failed to load. Please try refreshing.');
 					}
 				};
 				loadRemainingImages();
 			}
-
 		} catch (error) {
 			console.error('Error fetching chapter:', error);
+			setError('Failed to load chapter. Please try again.');
 			setLoading(false);
-			return (
-				<View className="flex-1 justify-center items-center">
-					<View className="px-4 py-8 items-center">
-						<MaterialCommunityIcons name="alert-circle" color="#FFA001" size={64} />
-						<Text className="text-white text-xl font-bold mt-4">Something went wrong!</Text>
-						<Text className="text-slate-400 text-center mt-2">We're having trouble connecting to our servers. Please try again later.</Text>
-						<TouchableOpacity
-							className="mt-4 bg-slate-900 rounded-full px-6 py-3"
-							onPress={() => fetchChapter()}
-						>
-							<View className="flex-row items-center gap-2">
-								<MaterialCommunityIcons name="refresh" color="#FFA001" size={24} />
-								<Text className="text-white font-bold">Try Again</Text>
-							</View>
-						</TouchableOpacity>
-					</View>
-				</View>
-			);
 		}
 	};
 
@@ -133,7 +177,7 @@ const Read = () => {
 		}
 	};
 
-	// Loading
+	// Loading or Error State
 	if (loading || (refreshing && chapters.length === 0)) {
 		return (
 			<View className="flex-1 items-center justify-center bg-black">
@@ -145,8 +189,29 @@ const Read = () => {
 						/>
 					</View>
 					<Text className="text-center mt-2 text-[#FFA001]">
-						Loading... {Math.round(loadingProgress)}%
+						{isOfflineMode ? 'Loading offline chapter' : 'Loading chapter online'}... {Math.round(loadingProgress)}%
 					</Text>
+				</View>
+			</View>
+		);
+	}
+
+	if (error) {
+		return (
+			<View className="flex-1 justify-center items-center bg-black">
+				<View className="px-4 py-8 items-center">
+					<MaterialCommunityIcons name="alert-circle" color="#FFA001" size={64} />
+					<Text className="text-white text-xl font-bold mt-4">Something went wrong!</Text>
+					<Text className="text-slate-400 text-center mt-2">{error}</Text>
+					<TouchableOpacity
+						className="mt-4 bg-slate-900 rounded-full px-6 py-3"
+						onPress={() => fetchChapter()}
+					>
+						<View className="flex-row items-center gap-2">
+							<MaterialCommunityIcons name="refresh" color="#FFA001" size={24} />
+							<Text className="text-white font-bold">Try Again</Text>
+						</View>
+					</TouchableOpacity>
 				</View>
 			</View>
 		);
@@ -273,6 +338,11 @@ const Read = () => {
 						</View>
 					)}
 				</View>
+				{isOfflineMode && (
+					<View className="absolute top-4 right-4 bg-slate-900 rounded-full px-4 py-2 z-10">
+						<Text className="text-white text-sm">Reading Offline</Text>
+					</View>
+				)}
 			</View>
 		</SafeAreaView>
 	)
