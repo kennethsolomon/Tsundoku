@@ -126,7 +126,7 @@ const Home = () => {
           </View>
         </View>
 
-        <View className="h-[72vh]">
+        <View className="h-[70vh]">
           <FlatList
             data={filteredBookmarks}
             renderItem={renderItem}

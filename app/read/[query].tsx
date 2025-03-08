@@ -273,14 +273,14 @@ const Read = () => {
 
 				{/* Bottom controls container */}
 				<View className="absolute bottom-0 left-0 right-0">
-					{showMangaDetail && (
+					{showMangaDetail && selectedManga?.chapters && (
 						<View>
 							<MangaDetail manga={selectedManga} className='bg-black w-full p-4' />
 							<View className="h-[1px] bg-slate-700" />
 						</View>
 					)}
 
-					{showNavigatorBar && (
+					{showNavigatorBar && selectedManga?.chapters && (
 						<View className="bg-black py-4">
 							<View className="flex flex-row justify-between items-center mx-12">
 								<TouchableOpacity
@@ -299,7 +299,7 @@ const Read = () => {
 										<Text className="text-white text-lg font-bold">{selectedChapter?.title}</Text>
 										<MaterialCommunityIcons name={isChapterListVisible ? "chevron-up" : "chevron-down"} color="#FFA001" size={24} />
 									</View>
-									{isChapterListVisible && (
+									{isChapterListVisible && selectedManga?.chapters && (
 										<View className="bg-slate-900 absolute bottom-12 w-full p-2 rounded-lg left-2">
 											<FlatList
 												className="max-h-72 w-full"

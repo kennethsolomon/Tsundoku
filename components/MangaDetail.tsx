@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useGlobalContext } from '@/contexts/GlobalStateContext'
-
+import { getDescription } from '@/utils/common';
 const MangaDetail = ({ manga, className = '' }: { manga: any, className?: string }) => {
 	const { addBookmark, removeBookmark, isBookmarked } = useGlobalContext();
 	const [isBookmarkedState, setIsBookmarkedState] = useState(false);
@@ -27,7 +27,7 @@ const MangaDetail = ({ manga, className = '' }: { manga: any, className?: string
 				setIsBookmarkedState(false);
 			}
 		} else {
-			const success = await addBookmark(manga);
+			const success = await addBookmark({ ...manga, description: getDescription(manga?.description) });
 			if (success) {
 				setIsBookmarkedState(true);
 			}

@@ -6,7 +6,7 @@ import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import { DownloadedChapter } from '@/services/downloadService';
 
 const Downloads = () => {
-	const { downloads, deleteDownload, refreshDownloads } = useGlobalContext();
+	const { downloads, deleteDownload, refreshDownloads, setSelectedChapter } = useGlobalContext();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [refreshing, setRefreshing] = useState(false);
 	const [filteredDownloads, setFilteredDownloads] = useState<DownloadedChapter[]>(downloads);
@@ -48,10 +48,15 @@ const Downloads = () => {
 		);
 	}, [deleteDownload]);
 
+	const handleDownloadedChapter = useCallback((chapterId: string) => {
+		setSelectedChapter(chapterId);
+		router.push(`/read/${chapterId}`);
+	}, []);
+
 	const renderItem = useCallback(({ item }: { item: DownloadedChapter }) => (
 		<View className="px-4">
 			<TouchableOpacity
-				onPress={() => router.push(`/read/${item.chapterId}`)}
+				onPress={() => handleDownloadedChapter(item.chapterId)}
 				onLongPress={() => handleDeleteDownload(item.chapterId, item.title)}
 				delayLongPress={500}
 			>
