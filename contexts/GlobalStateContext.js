@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { StorageService, BookmarkItem } from "@/services/storageService";
+import { getDescription } from "@/utils/common";
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -26,7 +27,7 @@ const GlobalProvider = ({ children }) => {
       id: manga.id,
       title: manga.title,
       image: manga.image,
-      description: manga.description.en,
+      description: manga.description,
     };
 
     const success = await StorageService.addBookmark(bookmarkItem);
