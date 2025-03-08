@@ -146,7 +146,7 @@ const Browse = () => {
 		<SafeAreaView className="max-h-[100vh] bg-black">
 			<View className="h-[100vh]">
 				<View className="mt-[2vh] px-4 mb-4">
-					<Text className="text-3xl font-bold text-white">Library</Text>
+					<Text className="text-3xl font-bold text-white">Browse</Text>
 				</View>
 				<View className="px-4 mb-2">
 					<View className="relative">
