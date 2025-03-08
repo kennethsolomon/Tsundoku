@@ -169,7 +169,7 @@ const Browse = () => {
 					</View>
 				</View>
 
-				<View className="h-[72vh]">
+				<View className="h-[70vh]">
 					<FlatList
 						data={manga}
 						renderItem={renderItem}
