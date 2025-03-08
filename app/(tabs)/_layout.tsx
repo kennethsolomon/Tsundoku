@@ -47,6 +47,16 @@ const TabLayout = () => {
 					),
 				}}
 			/>
+			<Tabs.Screen
+				name="credit"
+				options={{
+					headerShown: false,
+					title: 'Credits',
+					tabBarIcon: ({ color }) => (
+						<MaterialCommunityIcons name="code-braces" color={color} size={28} />
+					),
+				}}
+			/>
 		</Tabs>
 	)
 }
