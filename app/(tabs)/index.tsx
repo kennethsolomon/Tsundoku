@@ -4,13 +4,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import { BookmarkItem } from '@/services/storageService';
+import { formatDate } from '@/utils/common';
 
 const Home = () => {
   const { bookmarks, isLoading, removeBookmark, refreshBookmarks } = useGlobalContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [filteredBookmarks, setFilteredBookmarks] = useState<BookmarkItem[]>(bookmarks);
-
   useEffect(() => {
     const filtered = bookmarks.filter((manga: BookmarkItem) =>
       manga.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -61,11 +61,12 @@ const Home = () => {
             className="w-[100px] h-[160px] rounded-md"
             defaultSource={{ uri: 'https://placehold.co/100x160' }}
           />
-          <View className="p-4 flex-auto flex justify-between">
+          <View className="flex-1 p-4 flex-col justify-between">
             <View>
               <Text className="text-white text-xl font-bold line-clamp-2">{item.title}</Text>
-              <Text className="text-slate-400 mt-2 line-clamp-2">{item.description}</Text>
+              <Text className="text-slate-400 mt-2 line-clamp-3">{item.description}</Text>
             </View>
+            <Text className="text-slate-400 line-clamp-4">{formatDate(item.dateAdded)}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -73,7 +74,9 @@ const Home = () => {
   ), [handleRemoveBookmark]);
 
   const ItemSeparator = useCallback(() => (
-    <View className='h-[1px] bg-slate-700 mx-4' />
+    <View className='py-2'>
+      <View className='h-[1px] bg-slate-700 mx-4' />
+    </View>
   ), []);
 
   const ListEmptyComponent = useCallback(() => (

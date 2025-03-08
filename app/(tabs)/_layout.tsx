@@ -37,6 +37,16 @@ const TabLayout = () => {
 					),
 				}}
 			/>
+			<Tabs.Screen
+				name="downloads"
+				options={{
+					headerShown: false,
+					title: 'Downloads',
+					tabBarIcon: ({ color }) => (
+						<MaterialCommunityIcons name="download" color={color} size={28} />
+					),
+				}}
+			/>
 		</Tabs>
 	)
 }

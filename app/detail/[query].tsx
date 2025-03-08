@@ -9,10 +9,25 @@ import { getDescription } from '@/utils/common';
 const Detail = () => {
 	const { query } = useLocalSearchParams();
 	const [expanded, setExpanded] = useState(false);
-	const { setSelectedChapter, setSelectedManga } = useGlobalContext();
+	const { setSelectedChapter,
+		setSelectedManga,
+		downloadChapter,
+		deleteDownload,
+		isChapterDownloaded,
+		getDownloadProgress,
+		getMangaInfoOffline,
+		hasMangaDownloads } = useGlobalContext();
 	const [manga, setManga] = useState<any>(null);
+	const [downloadStates, setDownloadStates] = useState<{ [key: string]: boolean }>({});
+	const [downloadProgresses, setDownloadProgresses] = useState<{ [key: string]: number }>({});
+	const [downloadStatuses, setDownloadStatuses] = useState<{ [key: string]: 'pending' | 'downloading' | 'completed' | 'error' }>({});
+	const [isOfflineMode, setIsOfflineMode] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const [refreshing, setRefreshing] = useState(false);
+
+	const mangaService = useRef(new MangaFactory().getMangaService('mangadex')).current;
 
 	const onRefresh = async () => {
 		setRefreshing(true);
@@ -20,32 +35,34 @@ const Detail = () => {
 		setRefreshing(false);
 	};
 
-	const mangaService = useRef(new MangaFactory().getMangaService('mangadex')).current;
-
 	async function getMangaInfo() {
+		setError(null);
+		setIsLoading(true);
 		try {
-			const manga = await mangaService.getMangaInfo(query as string);
-			setManga(manga);
+			// First check if we have offline access to this manga
+			const hasOfflineAccess = await hasMangaDownloads(query as string);
+			if (hasOfflineAccess) {
+				const offlineMangaInfo = await getMangaInfoOffline(query as string);
+				if (offlineMangaInfo) {
+					setManga(offlineMangaInfo);
+					setIsOfflineMode(true);
+					setIsLoading(false);
+					return;
+				}
+			}
+
+			// If no offline access or no offline info, fetch from API
+			const mangaInfo = await mangaService.getMangaInfo(query as string);
+			if (!mangaInfo) {
+				throw new Error('Failed to fetch manga information');
+			}
+			setManga(mangaInfo);
+			setIsOfflineMode(false);
 		} catch (error) {
 			console.error('Error fetching manga info:', error);
-			return (
-				<View className="flex-1 justify-center items-center">
-					<View className="px-4 py-8 items-center">
-						<MaterialCommunityIcons name="alert-circle" color="#FFA001" size={64} />
-						<Text className="text-white text-xl font-bold mt-4">Something went wrong!</Text>
-						<Text className="text-slate-400 text-center mt-2">We're having trouble connecting to our servers. Please try again later.</Text>
-						<TouchableOpacity
-							className="mt-4 bg-slate-900 rounded-full px-6 py-3"
-							onPress={() => getMangaInfo()}
-						>
-							<View className="flex-row items-center gap-2">
-								<MaterialCommunityIcons name="refresh" color="#FFA001" size={24} />
-								<Text className="text-white font-bold">Try Again</Text>
-							</View>
-						</TouchableOpacity>
-					</View>
-				</View>
-			);
+			setError('Failed to load manga information. Please check your internet connection.');
+		} finally {
+			setIsLoading(false);
 		}
 	}
 
@@ -57,12 +74,135 @@ const Detail = () => {
 
 	useEffect(() => {
 		getMangaInfo();
-	}, []);
+	}, [query]);
 
-	if (!manga) {
+	useEffect(() => {
+		if (manga?.chapters) {
+			checkDownloadStates();
+		}
+	}, [manga]);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (manga?.chapters) {
+				manga.chapters.forEach((chapter: any) => {
+					const progress = getDownloadProgress(chapter.id);
+					setDownloadProgresses(prev => ({
+						...prev,
+						[chapter.id]: progress.progress
+					}));
+					setDownloadStatuses(prev => ({
+						...prev,
+						[chapter.id]: progress.status
+					}));
+				});
+			}
+		}, 500);
+
+		return () => clearInterval(interval);
+	}, [manga, getDownloadProgress]);
+
+	const checkDownloadStates = async () => {
+		if (!manga?.chapters) return;
+
+		const states: { [key: string]: boolean } = {};
+		for (const chapter of manga.chapters) {
+			states[chapter.id] = await isChapterDownloaded(chapter.id);
+		}
+		setDownloadStates(states);
+	};
+
+	const handleDownload = async (chapter: any) => {
+		try {
+			const isDownloaded = downloadStates[chapter.id];
+			if (isDownloaded) {
+				Alert.alert(
+					'Delete Download',
+					`Are you sure you want to delete the downloaded chapter "${chapter.title}"?`,
+					[
+						{
+							text: 'Cancel',
+							style: 'cancel'
+						},
+						{
+							text: 'Delete',
+							style: 'destructive',
+							onPress: async () => {
+								await deleteDownload(chapter.id);
+								setDownloadStates(prev => ({
+									...prev,
+									[chapter.id]: false
+								}));
+							}
+						}
+					]
+				);
+			} else {
+				// First fetch the chapter pages
+				try {
+					const chapterPages = await mangaService.getChapters(chapter.id);
+					if (!chapterPages || chapterPages.length === 0) {
+						throw new Error('No pages found for this chapter');
+					}
+
+					// Now download with the fetched pages
+					const success = await downloadChapter(manga, {
+						...chapter,
+						pages: chapterPages
+					});
+
+					if (success) {
+						setDownloadStates(prev => ({
+							...prev,
+							[chapter.id]: true
+						}));
+					} else {
+						throw new Error('Failed to download chapter');
+					}
+				} catch (error) {
+					console.error('Error fetching chapter pages:', error);
+					Alert.alert('Error', 'Failed to download chapter. Please try again.');
+				}
+			}
+		} catch (error) {
+			console.error('Error handling download:', error);
+			Alert.alert('Error', 'Failed to download chapter. Please try again.');
+		}
+	};
+
+	if (isLoading) {
 		return (
 			<View className="flex-1 items-center justify-center bg-black">
 				<ActivityIndicator size="large" color="#FFA001" />
+			</View>
+		);
+	}
+
+	if (error) {
+		return (
+			<View className="flex-1 justify-center items-center bg-black">
+				<View className="px-4 py-8 items-center">
+					<MaterialCommunityIcons name="alert-circle" color="#FFA001" size={64} />
+					<Text className="text-white text-xl font-bold mt-4">Something went wrong!</Text>
+					<Text className="text-slate-400 text-center mt-2">{error}</Text>
+					<TouchableOpacity
+						className="mt-4 bg-slate-900 rounded-full px-6 py-3"
+						onPress={() => getMangaInfo()}
+					>
+						<View className="flex-row items-center gap-2">
+							<MaterialCommunityIcons name="refresh" color="#FFA001" size={24} />
+							<Text className="text-white font-bold">Try Again</Text>
+						</View>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
+
+	if (!manga) {
+		return (
+			<View className="flex-1 justify-center items-center bg-black">
+				<Text className="text-white text-xl">No manga found</Text>
 			</View>
 		);
 	}
@@ -76,7 +216,7 @@ const Detail = () => {
 					<View>
 						<Text className='text-white text-xl font-bold'>About this manga</Text>
 						<Text className={`text-slate-400 mt-2 ${!expanded ? 'line-clamp-3' : ''}`}>
-							{getDescription(manga.description)}
+							{getDescription(manga?.description)}
 						</Text>
 					</View>
 					<View className="flex items-end">
@@ -86,13 +226,20 @@ const Detail = () => {
 					</View>
 				</View>
 
-				<TouchableOpacity className='bg-amber-500 p-3 rounded-3xl mt-4' onPress={() => setExpanded(!expanded)}>
+				<TouchableOpacity
+					className='bg-amber-500 p-3 rounded-3xl mt-4'
+					onPress={() => {
+						if (manga?.chapters?.length > 0) {
+							handleStartReading(manga.chapters[0]);
+						}
+					}}
+				>
 					<Text className="text-white text-center text-md font-semibold">Start Reading</Text>
 				</TouchableOpacity>
 
 				<FlatList
 					className='mt-4 flex-1'
-					data={manga.chapters}
+					data={manga?.chapters || []}
 					renderItem={({ item }) => (
 						<TouchableOpacity
 							onPress={() => handleStartReading(item)}
@@ -102,11 +249,9 @@ const Detail = () => {
 									`What would you like to do with ${item.title}?`,
 									[
 										{
-											text: '🗑️ Delete',
-											onPress: () => {
-												console.log('Delete', item.title);
-											},
-											style: 'destructive'
+											text: downloadStates[item.id] ? '🗑️ Delete Download' : '⬇️ Download',
+											onPress: () => handleDownload(item),
+											style: downloadStates[item.id] ? 'destructive' : 'default'
 										},
 										{
 											text: 'Cancel',
@@ -121,14 +266,29 @@ const Detail = () => {
 									<View className='flex-1 justify-center'>
 										<Text className='text-white text-lg font-semibold'>{item.title}</Text>
 										<Text className='text-slate-400 text-sm'>Chapter: {item.chapterNumber}</Text>
+										{downloadStatuses[item.id] === 'downloading' && (
+											<Text className='text-amber-500 text-xs mt-1'>
+												Downloading... {Math.round(downloadProgresses[item.id])}%
+											</Text>
+										)}
 									</View>
 								</View>
 								{/* Download Button */}
 								<TouchableOpacity
 									className="bg-slate-900 rounded-full p-2 mr-4"
+									onPress={() => handleDownload(item)}
+									disabled={downloadStatuses[item.id] === 'downloading'}
 								>
 									<View>
-										<MaterialCommunityIcons name="download" color="#FFA001" size={24} />
+										{downloadStates[item.id] ? (
+											<MaterialCommunityIcons name="check-circle" color="#22C55E" size={24} />
+										) : downloadStatuses[item.id] === 'downloading' ? (
+											<ActivityIndicator size="small" color="#FFA001" />
+										) : downloadStatuses[item.id] === 'error' ? (
+											<MaterialCommunityIcons name="alert" color="#EF4444" size={24} />
+										) : (
+											<MaterialCommunityIcons name="download" color="#FFA001" size={24} />
+										)}
 									</View>
 								</TouchableOpacity>
 							</View>
