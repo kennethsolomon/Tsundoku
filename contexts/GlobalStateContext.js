@@ -100,6 +100,18 @@ const GlobalProvider = ({ children }) => {
     return await downloadService.hasMangaDownloads(mangaId);
   };
 
+  const isRead = async (mangaId, chapterId) => {
+    return await StorageService.isRead(mangaId, chapterId);
+  };
+
+  const addReadChapter = async (mangaId, chapterId) => {
+    return await StorageService.addReadChapter(mangaId, chapterId);
+  };
+
+  const removeReadChapter = async (mangaId, chapterId) => {
+    return await StorageService.removeReadChapter(mangaId, chapterId);
+  };
+
   return (
     <GlobalContext.Provider
       value={{
@@ -121,6 +133,9 @@ const GlobalProvider = ({ children }) => {
         refreshDownloads: loadDownloads,
         getMangaInfoOffline,
         hasMangaDownloads,
+        isRead,
+        addReadChapter,
+        removeReadChapter,
       }}
     >
       {children}

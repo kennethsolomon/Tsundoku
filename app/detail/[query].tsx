@@ -16,9 +16,13 @@ const Detail = () => {
 		isChapterDownloaded,
 		getDownloadProgress,
 		getMangaInfoOffline,
-		hasMangaDownloads } = useGlobalContext();
+		hasMangaDownloads,
+		isRead,
+		removeReadChapter,
+		addReadChapter } = useGlobalContext();
 	const [manga, setManga] = useState<any>(null);
 	const [downloadStates, setDownloadStates] = useState<{ [key: string]: boolean }>({});
+	const [readStates, setReadStates] = useState<{ [key: string]: boolean }>({});
 	const [downloadProgresses, setDownloadProgresses] = useState<{ [key: string]: number }>({});
 	const [downloadStatuses, setDownloadStatuses] = useState<{ [key: string]: 'pending' | 'downloading' | 'completed' | 'error' }>({});
 	const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -79,8 +83,9 @@ const Detail = () => {
 	useEffect(() => {
 		if (manga?.chapters) {
 			checkDownloadStates();
+			checkReadStates();
 		}
-	}, [manga]);
+	}, [manga, readStates]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -110,6 +115,24 @@ const Detail = () => {
 			states[chapter.id] = await isChapterDownloaded(chapter.id);
 		}
 		setDownloadStates(states);
+	};
+
+	const checkReadStates = async () => {
+		if (!manga?.chapters) return;
+
+		const states: { [key: string]: boolean } = {};
+		for (const chapter of manga.chapters) {
+			states[chapter.id] = await isRead(manga.id, chapter.id);
+		}
+		setReadStates(states);
+	};
+
+	const handleRead = async (mangaId: string, chapterId: string) => {
+		if (readStates[chapterId]) {
+			await removeReadChapter(mangaId, chapterId);
+		} else {
+			await addReadChapter(mangaId, chapterId);
+		}
 	};
 
 	const handleDownload = async (chapter: any) => {
@@ -170,7 +193,7 @@ const Detail = () => {
 		}
 	};
 
-	if (isLoading) {
+	if (isLoading && !refreshing) {
 		return (
 			<View className="flex-1 items-center justify-center bg-black">
 				<ActivityIndicator size="large" color="#FFA001" />
@@ -210,7 +233,7 @@ const Detail = () => {
 	return (
 		<SafeAreaView className="flex-1 bg-black">
 			<View className="flex-1 px-4">
-				<MangaDetail manga={manga} />
+				<MangaDetail manga={manga} className='mt-4' />
 
 				<View className='mt-4'>
 					<View>
@@ -238,7 +261,7 @@ const Detail = () => {
 				</TouchableOpacity>
 
 				<FlatList
-					className='mt-4 flex-1'
+					className='mt-2'
 					data={manga?.chapters || []}
 					renderItem={({ item }) => (
 						<TouchableOpacity
@@ -249,9 +272,9 @@ const Detail = () => {
 									`What would you like to do with ${item.title}?`,
 									[
 										{
-											text: downloadStates[item.id] ? '🗑️ Delete Download' : '⬇️ Download',
-											onPress: () => handleDownload(item),
-											style: downloadStates[item.id] ? 'destructive' : 'default'
+											text: readStates[item.id] ? '🗑️ Remove from Read' : '👀 Mark as Read',
+											onPress: () => handleRead(manga.id, item.id),
+											style: readStates[item.id] ? 'destructive' : 'default'
 										},
 										{
 											text: 'Cancel',
@@ -261,10 +284,15 @@ const Detail = () => {
 								);
 							}}
 						>
-							<View className='flex flex-row justify-between items-center'>
+							<View className={`flex flex-row justify-between items-center rounded-lg ${readStates[item.id] ? 'bg-slate-800/50' : ''}`}>
 								<View className='h-20'>
-									<View className='flex-1 justify-center'>
-										<Text className='text-white text-lg font-semibold'>{item.title}</Text>
+									<View className='flex-1 justify-center mx-4'>
+										<View className="flex-row items-center">
+											<Text className='text-white text-lg font-semibold max-w-[70vw] mr-2'>{item.title}</Text>
+											{readStates[item.id] && (
+												<MaterialCommunityIcons name="eye" size={20} color="#FFA001" style={{ opacity: 0.7 }} />
+											)}
+										</View>
 										<Text className='text-slate-400 text-sm'>Chapter: {item.chapterNumber}</Text>
 										{downloadStatuses[item.id] === 'downloading' && (
 											<Text className='text-amber-500 text-xs mt-1'>
@@ -275,7 +303,7 @@ const Detail = () => {
 								</View>
 								{/* Download Button */}
 								<TouchableOpacity
-									className="bg-slate-900 rounded-full p-2 mr-4"
+									className="bg-slate-900 rounded-full p-2 mx-4"
 									onPress={() => handleDownload(item)}
 									disabled={downloadStatuses[item.id] === 'downloading'}
 								>
@@ -291,10 +319,11 @@ const Detail = () => {
 										)}
 									</View>
 								</TouchableOpacity>
+
 							</View>
 						</TouchableOpacity>
 					)}
-					ItemSeparatorComponent={() => <View className='h-[1px] bg-slate-700' />}
+					ItemSeparatorComponent={() => <View className='h-[1px] bg-slate-700 mx-2' />}
 					ListEmptyComponent={() => (
 						<View className="px-4 py-8 items-center">
 							<MaterialCommunityIcons name="book-open-variant" color="#FFA001" size={64} />

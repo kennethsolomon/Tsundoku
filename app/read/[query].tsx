@@ -20,7 +20,7 @@ interface ChapterPage {
 
 const Read = () => {
 	const { query } = useLocalSearchParams();
-	const { selectedChapter, selectedManga, setSelectedChapter, setSelectedManga, isChapterDownloaded, downloads, getDownloadProgress } = useGlobalContext();
+	const { selectedChapter, selectedManga, setSelectedChapter, setSelectedManga, isChapterDownloaded, downloads, getDownloadProgress, addReadChapter, isRead } = useGlobalContext();
 	const [isChapterListVisible, setIsChapterListVisible] = useState(false);
 	const [chapters, setChapter] = useState<Chapter[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -33,11 +33,15 @@ const Read = () => {
 	const [isOfflineMode, setIsOfflineMode] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	const [markedAsRead, setMarkedAsRead] = useState<boolean>(false);
+
 	const win = Dimensions.get('window');
 
 	// Initialize Chapter
 	const fetchChapter = async () => {
 		setLoading(true);
+		const readState = await isRead(selectedManga.id, chapterId ?? query as string);
+		setMarkedAsRead(readState);
 		setError(null);
 		try {
 			setLoadingProgress(0);
@@ -261,6 +265,22 @@ const Read = () => {
 						refreshControl={
 							<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 						}
+						onViewableItemsChanged={({ viewableItems }) => {
+							viewableItems.forEach(({ item }) => {
+								if (!markedAsRead) {
+									if (chapters.length === 1 || chapters.length === 2) {
+										setMarkedAsRead(true);
+										addReadChapter(selectedManga.id, chapterId ?? query as string);
+									} else if (item.page === 3 && chapters.length >= 3) {
+										setMarkedAsRead(true);
+										addReadChapter(selectedManga.id, chapterId ?? query as string);
+									}
+								}
+							});
+						}}
+						viewabilityConfig={{
+							itemVisiblePercentThreshold: 50 // Item is considered visible when 50% or more is visible
+						}}
 						ListEmptyComponent={() => (
 							<View className="px-4 py-8 items-center">
 								<MaterialCommunityIcons name="book-open-variant" color="#FFA001" size={64} />

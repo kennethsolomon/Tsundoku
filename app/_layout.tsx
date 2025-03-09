@@ -10,7 +10,7 @@ const RootLayout = () => {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false, title: '' }} />
         <Stack.Screen name="read/[query]" options={{ headerShown: false, title: '', }} />
-        <Stack.Screen name="detail/[query]" options={{ headerShown: false, title: '', }} />
+        <Stack.Screen name="detail/[query]" options={{ headerShown: true, title: '', headerStyle: { backgroundColor: 'black' } }} />
       </Stack>
       <StatusBar style="auto" />
     </GlobalProvider>

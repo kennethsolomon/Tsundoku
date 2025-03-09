@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import { Platform } from 'react-native';
 
 const DOWNLOADS_KEY = '@downloads';
-const DOWNLOAD_DIR = `${FileSystem.documentDirectory}downloads/`;
+const DOWNLOAD_DIR = Platform.select({
+	web: '',
+	default: `${FileSystem.documentDirectory}downloads/`
+});
 
 export interface DownloadedChapter {
 	mangaId: string;
@@ -26,10 +30,14 @@ class DownloadService {
 	private downloadProgress: DownloadProgress = {};
 
 	constructor() {
-		this.ensureDownloadDirectory();
+		if (Platform.OS !== 'web') {
+			this.ensureDownloadDirectory();
+		}
 	}
 
 	private async ensureDownloadDirectory() {
+		if (Platform.OS === 'web') return;
+
 		const dirInfo = await FileSystem.getInfoAsync(DOWNLOAD_DIR);
 		if (!dirInfo.exists) {
 			await FileSystem.makeDirectoryAsync(DOWNLOAD_DIR, { intermediates: true });
@@ -58,11 +66,13 @@ class DownloadService {
 	}
 
 	async isChapterDownloaded(chapterId: string): Promise<boolean> {
+		if (Platform.OS === 'web') return false;
 		const downloads = await this.getDownloadedChapters();
 		return downloads.some(chapter => chapter.chapterId === chapterId);
 	}
 
 	async hasMangaDownloads(mangaId: string): Promise<boolean> {
+		if (Platform.OS === 'web') return false;
 		const downloads = await this.getDownloadedChapters();
 		return downloads.some(chapter => chapter.mangaId === mangaId);
 	}
@@ -79,6 +89,11 @@ class DownloadService {
 		pages: { img: string; page: number }[],
 		mangaInfo?: any
 	): Promise<boolean> {
+		if (Platform.OS === 'web') {
+			console.warn('Downloads are not supported on web platform');
+			return false;
+		}
+
 		try {
 			// Initialize download progress
 			this.downloadProgress[chapterId] = { progress: 0, status: 'downloading' };
@@ -123,7 +138,7 @@ class DownloadService {
 				chapterNumber,
 				pages: downloadedPages,
 				dateDownloaded: Date.now(),
-				mangaInfo // Store manga info with the first downloaded chapter
+				mangaInfo
 			};
 
 			downloads.push(downloadedChapter);
@@ -140,6 +155,8 @@ class DownloadService {
 	}
 
 	async deleteDownloadedChapter(chapterId: string): Promise<boolean> {
+		if (Platform.OS === 'web') return false;
+
 		try {
 			const downloads = await this.getDownloadedChapters();
 			const chapter = downloads.find(d => d.chapterId === chapterId);
