@@ -7,6 +7,13 @@
 <h1 align="center">
   Tsundoku (積ん読)
 </h1>
+
+
+<p align="center">
+   The act of acquiring books and letting them pile up unread (relatable for manga fans 😆)</p>
+
+<br>
+
 <p align="center">
    Tsundoku is a mobile application built with React Native and Expo that helps manga enthusiasts discover, track, and organize their manga reading lists. The app integrates with popular manga services to provide a seamless reading experience.</p>
 
