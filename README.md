@@ -1,10 +1,20 @@
-# Tsundoku (積ん読)
+<p align="center">
+  <a href="https://hello.kennethsolomon.com/">
+    <img alt="Tsundoku" src="https://github.com/kennethsolomon/Tsundoku/blob/main/assets/images/app-icon.png?raw=true" width="150">
+  </a>
+</p>
 
-The act of acquiring books and letting them pile up unread (relatable for manga fans 😆)
+<h1 align="center">
+  Tsundoku (積ん読)
+</h1>
+<p align="center">
+   Tsundoku is a mobile application built with React Native and Expo that helps manga enthusiasts discover, track, and organize their manga reading lists. The app integrates with popular manga services to provide a seamless reading experience.</p>
 
-## About
-
-Tsundoku is a mobile application built with React Native and Expo that helps manga enthusiasts discover, track, and organize their manga reading lists. The app integrates with popular manga services to provide a seamless reading experience.
+<p align="center">
+  <a href="https://hello.kennethsolomon.com/">
+    <img alt="Tsundoku" src="https://github.com/kennethsolomon/Tsundoku/blob/main/assets/images/showcase.png?raw=true" width="1080">
+  </a>
+</p>
 
 ## Features
 
