@@ -1,50 +1,110 @@
-# Welcome to your Expo app 👋
+# Tsundoku (積ん読)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The act of acquiring books and letting them pile up unread (relatable for manga fans 😆)
 
-## Get started
+## About
 
-1. Install dependencies
+Tsundoku is a mobile application built with React Native and Expo that helps manga enthusiasts discover, track, and organize their manga reading lists. The app integrates with popular manga services to provide a seamless reading experience.
 
+## Features
+
+- Browse and search manga from multiple sources (MangaDex, Mangahere (Coming Soon), and more...)
+- Track your reading progress
+- Create custom reading lists
+- Clean and intuitive user interface
+- Cross-platform support (iOS and Android)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Expo CLI (`npm install -g expo-cli`)
+- iOS Simulator (for Mac users) or Android Studio (for Android development)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/tsundoku.git
+   cd tsundoku
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. Run on your device or simulator:
+   - For iOS (Mac only):
+     ```bash
+     npm run ios
+     # or
+     yarn ios
+     ```
+   - For Android:
+     ```bash
+     npm run android
+     # or
+     yarn android
+     ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Development Setup
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. Install Xcode (for iOS development, Mac only):
+   - Download from the Mac App Store
+   - Install iOS Simulator through Xcode
 
-## Get a fresh project
+2. Install Android Studio (for Android development):
+   - Download from https://developer.android.com/studio
+   - Set up an Android Virtual Device (AVD)
 
-When you're ready, run:
+3. Configure environment variables:
+   - Copy `.env.example` to `.env`
+   - Fill in required API keys and configuration
 
-```bash
-npm run reset-project
-```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+### Build
 
-To learn more about developing your project with Expo, look at the following resources:
+### IOS
+1.	Prebuild Native Files
+   ```bash
+      npx expo prebuild
+   ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+2.	Open Xcode Project
+   ```bash
+      open ios/my-app.xcworkspace
+   ```
 
-## Join the community
+3.	Build and Run in Xcode
+- Connect an iPhone or use the simulator.
+- Set up signing with an Apple Developer account.
+- Click Run to build and test.
 
-Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Android
+1.	Prebuild Native Files
+   ```bash
+      npx expo prebuild
+   ```
+
+2.	Open Android Project in Android Studio
+   ```bash
+      cd android
+      ./gradlew assembleRelease
+   ```
+
+3.	Generate APK
+- Open the project in Android Studio.
+- Select Build → Build Bundle(s)/APK(s) → Build APK.
+- The APK will be available in android/app/build/outputs/apk/release/.

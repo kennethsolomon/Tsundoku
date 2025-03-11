@@ -1,37 +1,38 @@
 {
   "expo": {
-    "name": "tachiyomi-ios",
-    "slug": "tachiyomi-ios",
+    "name": "Tsundoku",
+    "slug": "tsundoku",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "tsundoku",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kennethsolomon.tachiyomi-ios",
+      "bundleIdentifier": "com.kennethsolomon.tsundoku",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/app-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.kennethsolomon.tsundoku"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/app-icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/app-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -49,9 +50,7 @@
         "projectId": "79766faf-5c30-44f8-82cd-6586bb64bec6"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/79766faf-5c30-44f8-82cd-6586bb64bec6"
     }
