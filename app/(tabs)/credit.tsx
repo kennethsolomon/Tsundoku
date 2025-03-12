@@ -1,7 +1,19 @@
-import { View, Text, SafeAreaView, Image, Linking, TouchableOpacity } from 'react-native'
+import { View, Text, SafeAreaView, Linking, TouchableOpacity, Alert } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { StorageService } from '@/services/storageService';
+import { useState, useEffect } from 'react';
 
 const Credit = () => {
+	const [currentSource, setCurrentSource] = useState('mangahere');
+
+	useEffect(() => {
+		const getSource = async () => {
+			const source = await StorageService.getMangaSource();
+			setCurrentSource(source);
+		};
+		getSource();
+	}, []);
+
 	return (
 		<SafeAreaView className="max-h-[100vh] bg-black">
 			<View className="h-[100vh]">
@@ -29,7 +41,49 @@ const Credit = () => {
 					</TouchableOpacity>
 
 					<Text className="text-slate-400 text-center mt-12 px-8">
-						This app was created with React Native, Expo, and TailwindCSS. All manga data is sourced from MangaDex.
+						This app was created with React Native, Expo, and TailwindCSS. All manga data is sourced from{' '}
+						<TouchableOpacity
+							onPress={() => {
+								Alert.alert(
+									'Select Manga Source',
+									'Choose your preferred manga source',
+									[
+										{
+											text: 'MangaDex',
+											onPress: async () => {
+												try {
+													await StorageService.setMangaSource('mangadex');
+													setCurrentSource('mangadex');
+													Alert.alert('Success', 'Manga source updated to MangaDex');
+												} catch (error) {
+													console.error('Error updating manga source:', error);
+													Alert.alert('Error', 'Failed to update manga source');
+												}
+											}
+										},
+										{
+											text: 'MangaHere',
+											onPress: async () => {
+												try {
+													await StorageService.setMangaSource('mangahere');
+													setCurrentSource('mangahere');
+													Alert.alert('Success', 'Manga source updated to MangaHere');
+												} catch (error) {
+													console.error('Error updating manga source:', error);
+													Alert.alert('Error', 'Failed to update manga source');
+												}
+											}
+										},
+										{
+											text: 'Cancel',
+											style: 'cancel'
+										}
+									]
+								);
+							}}
+						>
+							<Text className="text-[#FFA001]">{currentSource === 'mangadex' ? 'MangaDex' : 'MangaHere'}</Text>
+						</TouchableOpacity>
 					</Text>
 				</View>
 			</View>

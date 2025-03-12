@@ -6,7 +6,6 @@ import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import { MangaFactory } from '@/factory/MangaFactory';
 import MangaDetail from '@/components/MangaDetail';
 import { getDescription } from '@/utils/common';
-import { config } from '@/config';
 const Detail = () => {
 	const { query } = useLocalSearchParams();
 	const [expanded, setExpanded] = useState(false);
@@ -32,8 +31,6 @@ const Detail = () => {
 
 	const [refreshing, setRefreshing] = useState(false);
 
-	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
-
 	const onRefresh = async () => {
 		setRefreshing(true);
 		await getMangaInfo();
@@ -41,6 +38,11 @@ const Detail = () => {
 	};
 
 	async function getMangaInfo() {
+		const factory = new MangaFactory();
+		const service = await factory.getMangaService();
+
+		if (!service) return;
+
 		setError(null);
 		setIsLoading(true);
 		try {
@@ -57,7 +59,7 @@ const Detail = () => {
 			}
 
 			// If no offline access or no offline info, fetch from API
-			const mangaInfo = await mangaService.getMangaInfo(query as string);
+			const mangaInfo = await service.getMangaInfo(query as string);
 			if (!mangaInfo) {
 				throw new Error('Failed to fetch manga information');
 			}
@@ -69,6 +71,14 @@ const Detail = () => {
 		} finally {
 			setIsLoading(false);
 		}
+	}
+
+	async function getChapters(chapterId: string) {
+		const factory = new MangaFactory();
+		const service = await factory.getMangaService();
+
+		const chapters = await service.getChapters(chapterId);
+		return chapters;
 	}
 
 	function handleStartReading(chapter: any) {
@@ -165,7 +175,7 @@ const Detail = () => {
 			} else {
 				// First fetch the chapter pages
 				try {
-					const chapterPages = await mangaService.getChapters(chapter.id);
+					const chapterPages = await getChapters(chapter.id);
 					if (!chapterPages || chapterPages.length === 0) {
 						throw new Error('No pages found for this chapter');
 					}

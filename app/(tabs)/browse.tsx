@@ -5,7 +5,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import debounce from 'lodash/debounce';
 import { useGlobalContext } from '@/contexts/GlobalStateContext';
-import { config } from '@/config';
 const Browse = () => {
 	const { bookmarks, addBookmark } = useGlobalContext();
 	const [manga, setManga] = useState<any>([]);
@@ -14,18 +13,17 @@ const Browse = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	// Create mangaService instance once
-	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
-
 	// Memoize the fetch function
 	const fetchManga = useCallback(async (query: string = 'demonic emperor') => {
-		if (loading) return; // Prevent multiple simultaneous requests
+		if (loading) return; // Only check loading state
 
 		setLoading(true);
 		setError(null);
 
 		try {
-			const result = await mangaService.searchManga(query);
+			const factory = new MangaFactory();
+			const service = await factory.getMangaService();
+			const result = await service.searchManga(query);
 			// Filter out manga that are already bookmarked
 			const filteredResults = result.results.filter((manga: any) =>
 				!bookmarks.some((bookmark: any) => bookmark.id === manga.id)
@@ -52,7 +50,7 @@ const Browse = () => {
 		setRefreshing(true);
 		await fetchManga(searchTerm || 'demonic emperor');
 		setRefreshing(false);
-	}, [searchTerm, fetchManga]);
+	}, [searchTerm]);
 
 	const handleSearch = useCallback((text: string) => {
 		setSearchTerm(text);

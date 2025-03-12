@@ -6,7 +6,6 @@ import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import MangaDetail from '@/components/MangaDetail';
 import { Chapter as IChapter, ChapterPage as IChapterPage } from '@/interfaces/MangaServiceInterface';
 import { MangaFactory } from '@/factory/MangaFactory';
-import { config } from '@/config';
 
 interface Chapter extends IChapter {}
 interface ChapterPage extends IChapterPage {}
@@ -29,11 +28,16 @@ const Read = () => {
 	const [markedAsRead, setMarkedAsRead] = useState<boolean>(false);
 
 	const win = Dimensions.get('window');
-
-	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
+	const [mangaService, setMangaService] = useState<any>(null);
 
 	// Initialize Chapter
 	const fetchChapter = async () => {
+		const factory = new MangaFactory();
+		const service = await factory.getMangaService();
+		setMangaService(service);
+
+		if(!mangaService) return;
+
 		setLoading(true);
 		const readState = await isRead(selectedManga.id, chapterId ?? query as string);
 		setMarkedAsRead(readState);
@@ -61,7 +65,7 @@ const Read = () => {
 			} else {
 				// Fetch from API
 				try {
-					chapterPages = await mangaService.getChapters(currentChapterId);
+					chapterPages = await mangaService?.getChapters(currentChapterId);
 					if (!chapterPages || chapterPages.length === 0) {
 						throw new Error('No pages found for this chapter');
 					}

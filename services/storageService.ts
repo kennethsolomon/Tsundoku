@@ -8,9 +8,20 @@ export interface BookmarkItem {
 	image: string;
 	description: string;
 	dateAdded: number;
+	mangaSource: string;
 }
 
 export class StorageService {
+
+	static async getMangaSource(): Promise<string> {
+		const source = await AsyncStorage.getItem('MANGA_SOURCE');
+		return source ?? 'mangahere';
+	}
+
+	static async setMangaSource(source: string): Promise<void> {
+		await AsyncStorage.setItem('MANGA_SOURCE', source);
+	}
+
 	static async getBookmarks(): Promise<BookmarkItem[]> {
 		try {
 			const bookmarksJson = await AsyncStorage.getItem(BOOKMARKS_KEY);
@@ -24,9 +35,11 @@ export class StorageService {
 	static async addBookmark(manga: BookmarkItem): Promise<boolean> {
 		try {
 			const bookmarks = await this.getBookmarks();
+			const source = await AsyncStorage.getItem('MANGA_SOURCE');
 			if (!bookmarks.some(b => b.id === manga.id)) {
 				bookmarks.push({
 					...manga,
+					mangaSource: source ?? 'mangahere',
 					dateAdded: Date.now()
 				});
 				await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));

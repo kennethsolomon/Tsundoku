@@ -66,7 +66,17 @@ const Home = () => {
               <Text className="text-white text-xl font-bold line-clamp-2">{item.title}</Text>
               <Text className="text-slate-400 mt-2 line-clamp-3">{item.description}</Text>
             </View>
-            <Text className="text-slate-400 line-clamp-4">{formatDate(item.dateAdded)}</Text>
+            <View className="flex flex-row items-center gap-2 justify-between">
+              <Text className="text-slate-400 line-clamp-4">{formatDate(item.dateAdded)}</Text>
+              {item.mangaSource && (
+                <View className="bg-amber-500/80 self-start px-3 py-1 rounded-full">
+                  <Text className="text-white font-semibold">
+                    <Text className="text-lg">{item.mangaSource?.[0]?.toUpperCase()}</Text>
+                    <Text>{item.mangaSource?.slice(1)}</Text>
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </TouchableOpacity>

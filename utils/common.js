@@ -1,5 +1,6 @@
 export function getDescription(description) {
   if (!description) return "";
+  if (typeof description === 'string') return description;
   return (
     description?.en ||
     description?.["en"] ||
