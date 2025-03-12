@@ -38,7 +38,7 @@ const MangaDetail = ({ manga, className = '' }: { manga: any, className?: string
 		<SafeAreaView>
 			<View className={`flex flex-row gap-2 ${className}`}>
 				<Image
-					source={{ uri: manga?.image }}
+					source={{ uri: manga?.image, headers: manga?.headerForImage && manga?.headerForImage , cache: 'force-cache' }}
 					defaultSource={{ uri: 'https://placehold.co/100x160' }}
 					style={{
 						width: 120,

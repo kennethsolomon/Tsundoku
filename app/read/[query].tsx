@@ -1,22 +1,15 @@
 import { View, Text, SafeAreaView, Image, TouchableOpacity, Dimensions, FlatList, RefreshControl } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { mangaDexService } from '@/services/mangadexService';
 import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import MangaDetail from '@/components/MangaDetail';
+import { Chapter as IChapter, ChapterPage as IChapterPage } from '@/interfaces/MangaServiceInterface';
+import { MangaFactory } from '@/factory/MangaFactory';
+import { config } from '@/config';
 
-interface Chapter {
-	img: string;
-	page: number;
-	width: number;
-	height: number;
-}
-
-interface ChapterPage {
-	img: string;
-	page: number;
-}
+interface Chapter extends IChapter {}
+interface ChapterPage extends IChapterPage {}
 
 const Read = () => {
 	const { query } = useLocalSearchParams();
@@ -36,6 +29,8 @@ const Read = () => {
 	const [markedAsRead, setMarkedAsRead] = useState<boolean>(false);
 
 	const win = Dimensions.get('window');
+
+	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
 
 	// Initialize Chapter
 	const fetchChapter = async () => {
@@ -66,7 +61,7 @@ const Read = () => {
 			} else {
 				// Fetch from API
 				try {
-					chapterPages = await mangaDexService.getChapters(currentChapterId);
+					chapterPages = await mangaService.getChapters(currentChapterId);
 					if (!chapterPages || chapterPages.length === 0) {
 						throw new Error('No pages found for this chapter');
 					}
@@ -81,26 +76,61 @@ const Read = () => {
 			// Process initial batch of 5 images
 			const processInitialBatch = async (startIndex: number, batchSize: number): Promise<Chapter[]> => {
 				const batch = chapterPages.slice(startIndex, startIndex + batchSize);
-				const processedBatch = batch.map((chapter: ChapterPage, index: number) => new Promise<Chapter>((resolve, reject) => {
-					Image.getSize(
-						chapter.img,
-						(width: number, height: number) => {
-							const ratio = win.width / width;
-							const imageHeight = height * ratio;
-							const imageWidth = win.width;
-							setLoadingProgress(((startIndex + index + 1) / chapterPages.length) * 100);
-							resolve({
-								img: chapter.img,
-								page: chapter.page,
-								width: Math.round(imageWidth),
-								height: Math.round(imageHeight)
-							});
-						},
-						(error) => {
-							console.error('Error loading image:', error);
-							reject(error);
-						}
-					);
+				const processedBatch = batch.map((chapter: ChapterPage, index: number) => new Promise<Chapter>(async (resolve) => {
+					try {
+						// Use default dimensions based on screen size
+						const defaultDimensions = {
+							width: win.width,
+							height: win.height * 1.5 // Portrait orientation for manga
+						};
+
+						// Try to get actual dimensions, but don't wait too long
+						const getImageDimensions = () => new Promise<{ width: number; height: number }>((resolve, reject) => {
+							const timeoutId = setTimeout(() => {
+								console.warn('Image size detection timed out, using default dimensions');
+								resolve(defaultDimensions);
+							}, 3000); // 3 second timeout
+
+							Image.getSize(
+								chapter.img,
+								(width, height) => {
+									clearTimeout(timeoutId);
+									resolve({ width, height });
+								},
+								(error) => {
+									clearTimeout(timeoutId);
+									console.warn('Failed to get image size:', error);
+									resolve(defaultDimensions);
+								}
+							);
+						});
+
+						const { width, height } = await getImageDimensions();
+
+						const ratio = win.width / width;
+						const imageHeight = height * ratio;
+						const imageWidth = win.width;
+
+						setLoadingProgress(((startIndex + index + 1) / chapterPages.length) * 100);
+
+						resolve({
+							img: chapter.img,
+							page: chapter.page,
+							width: Math.round(imageWidth),
+							height: Math.round(imageHeight),
+							...(chapter.headerForImage && { headerForImage: chapter.headerForImage })
+						});
+					} catch (error) {
+						console.error('Error processing image:', error);
+						// Use portrait-oriented fallback size
+						resolve({
+							img: chapter.img,
+							page: chapter.page,
+							width: Math.round(win.width),
+							height: Math.round(win.height * 1.4),
+							...(chapter.headerForImage && { headerForImage: chapter.headerForImage })
+						});
+					}
 				}));
 
 				try {
@@ -112,7 +142,7 @@ const Read = () => {
 			};
 
 			// Load initial batch
-			const initialBatchSize = 5;
+			const initialBatchSize = 3;
 			const initialChapters = await processInitialBatch(0, initialBatchSize);
 			setChapter(initialChapters);
 			setLoading(false);
@@ -121,8 +151,8 @@ const Read = () => {
 			if (chapterPages.length > initialBatchSize) {
 				const loadRemainingImages = async () => {
 					try {
-						for (let i = initialBatchSize; i < chapterPages.length; i += 5) {
-							const nextBatch = await processInitialBatch(i, 5);
+						for (let i = initialBatchSize; i < chapterPages.length; i += 2) {
+							const nextBatch = await processInitialBatch(i, 2);
 							setChapter(prev => [...prev, ...nextBatch]);
 						}
 					} catch (error) {
@@ -255,7 +285,11 @@ const Read = () => {
 								onLongPress={() => router.back()}
 							>
 								<Image
-									source={{ uri: chapter.img }}
+									source={{
+										uri: chapter.img,
+										...(chapter.headerForImage && { headers: chapter.headerForImage }),
+										cache: 'force-cache'
+									}}
 									resizeMode="contain"
 									style={{ width: chapter.width, height: chapter.height }}
 								/>

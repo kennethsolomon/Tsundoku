@@ -6,6 +6,7 @@ import { useGlobalContext } from '@/contexts/GlobalStateContext';
 import { MangaFactory } from '@/factory/MangaFactory';
 import MangaDetail from '@/components/MangaDetail';
 import { getDescription } from '@/utils/common';
+import { config } from '@/config';
 const Detail = () => {
 	const { query } = useLocalSearchParams();
 	const [expanded, setExpanded] = useState(false);
@@ -31,7 +32,7 @@ const Detail = () => {
 
 	const [refreshing, setRefreshing] = useState(false);
 
-	const mangaService = useRef(new MangaFactory().getMangaService('mangadex')).current;
+	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
 
 	const onRefresh = async () => {
 		setRefreshing(true);
@@ -73,7 +74,8 @@ const Detail = () => {
 	function handleStartReading(chapter: any) {
 		setSelectedChapter(chapter);
 		setSelectedManga(manga);
-		router.push(`/read/${chapter.id}`);
+		const encodedChapterId = encodeURIComponent(chapter.id);
+		router.push(`/read/${encodedChapterId}`);
 	}
 
 	useEffect(() => {

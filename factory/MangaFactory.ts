@@ -1,5 +1,6 @@
 import { MangaServiceInterface } from '@/interfaces/MangaServiceInterface';
 import { mangaDexService } from '@/services/mangadexService';
+import { mangaHereService } from '@/services/mangahereService';
 
 export class MangaFactory {
 	private providers: { name: string; service: MangaServiceInterface }[] = [];
@@ -9,6 +10,10 @@ export class MangaFactory {
 			{
 				name: 'mangadex',
 				service: mangaDexService,
+			},
+			{
+				name: 'mangahere',
+				service: mangaHereService,
 			},
 		];
 	}

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import debounce from 'lodash/debounce';
 import { useGlobalContext } from '@/contexts/GlobalStateContext';
+import { config } from '@/config';
 const Browse = () => {
 	const { bookmarks, addBookmark } = useGlobalContext();
 	const [manga, setManga] = useState<any>([]);
@@ -14,7 +15,7 @@ const Browse = () => {
 	const [error, setError] = useState<string | null>(null);
 
 	// Create mangaService instance once
-	const mangaService = useRef(new MangaFactory().getMangaService('mangadex')).current;
+	const mangaService = useRef(new MangaFactory().getMangaService(config('env.MANGA_SOURCE'))).current;
 
 	// Memoize the fetch function
 	const fetchManga = useCallback(async (query: string = 'demonic emperor') => {
@@ -104,7 +105,7 @@ const Browse = () => {
 			>
 				<View className="flex flex-row ">
 					<Image
-						source={{ uri: item.image }}
+						source={{ uri: item.image, headers: item?.headerForImage && item?.headerForImage , cache: 'force-cache' }}
 						className="w-[100px] h-[160px] rounded-md"
 						defaultSource={{ uri: 'https://placehold.co/100x160' }}
 					/>
