@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { MangaServiceInterface } from '@/interfaces/MangaServiceInterface';
-import { ENV } from '@/config/env';
+import { config } from '@/config';
 
 class MangaDexService implements MangaServiceInterface {
-	private readonly baseUrl: string = ENV.API_BASE_URL + '/manga/mangadex';
+	private readonly baseUrl: string = config('env.API_BASE_URL') + '/manga/mangadex';
 
 	async searchManga(searchString: string): Promise<any> {
 		try {
