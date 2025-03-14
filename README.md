@@ -44,7 +44,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/tsundoku.git
+   git clone https://github.com/kennethsolomon/tsundoku.git
    cd tsundoku
    ```
 
