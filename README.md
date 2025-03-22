@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://hello.kennethsolomon.com/">
-    <img alt="Tsundoku" src="https://github.com/kennethsolomon/Tsundoku/blob/main/assets/images/showcase.png?raw=true" width="1080">
+    <img alt="Tsundoku" src="https://github.com/kennethsolomon/Tsundoku/blob/main/assets/images/show-case.png?raw=true" width="1080">
   </a>
 </p>
 
